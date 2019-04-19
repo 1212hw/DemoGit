@@ -37,17 +37,7 @@ References:
 import numpy
 
 
-def mySoftmax(x):
-    '''
-    实现理论的softmax函数
-    x_row:sample cnt; x_col:label cnt
-    :param x:
-    :return:
-    '''
-    x_array = numpy.array(x)
-    e_x = numpy.exp(x_array-x_array.max(axis=1,keepdims=True))
-    x_out = e_x / numpy.sum(e_x,axis=1, keepdims=True)
-    return x_out
+
 
 
 class MyLogisticRegression(object):
@@ -58,6 +48,7 @@ class MyLogisticRegression(object):
     points onto a set of hyperplanes, the distance to which is used to
     determine a class membership probability.
     """
+
 
     def __init__(self, input, n_in, n_out):
         """ Initialize the parameters of the logistic regression
@@ -96,7 +87,7 @@ class MyLogisticRegression(object):
         # hyperplane-k
         y_sim = numpy.dot(input,self.W)
         y_sim += self.b
-        self.p_y_given_x = mySoftmax(y_sim)
+        self.p_y_given_x = self.myLRSoftmax(y_sim)
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
@@ -114,7 +105,7 @@ class MyLogisticRegression(object):
         # hyperplane-k
         y_sim = numpy.dot(input,self.W)
         y_sim += self.b
-        self.p_y_given_x = mySoftmax(y_sim)
+        self.p_y_given_x = self.myLRSoftmax(y_sim)
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
@@ -169,6 +160,18 @@ class MyLogisticRegression(object):
         # i.e., the mean log-likelihood across the minibatch.
         return -numpy.mean(numpy.log(self.p_y_given_x)[numpy.arange(y.shape[0]), y])
         # end-snippet-2
+
+    def myLRSoftmax(self, x):
+        '''
+        实现理论的softmax函数
+        x_row:sample cnt; x_col:label cnt
+        :param x:
+        :return:
+        '''
+        x_array = numpy.array(x)
+        e_x = numpy.exp(x_array - x_array.max(axis=1, keepdims=True))
+        x_out = e_x / numpy.sum(e_x, axis=1, keepdims=True)
+        return x_out
 
     def myLogisticErors(self, y):
         """Return a float representing the number of errors in the minibatch
