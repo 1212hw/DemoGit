@@ -24,7 +24,7 @@ test3 = test1 * test2
 
 
 dataset = r'D:\hewei\program\python\FaceRecgData\mnist.pkl.gz'
-learning_rate = 0.2
+learning_rate = 3
 n_epochs = 100
 batch_size = 60
 output_len = 10

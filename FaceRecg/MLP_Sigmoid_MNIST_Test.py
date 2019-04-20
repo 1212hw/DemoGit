@@ -12,7 +12,7 @@ import numpy
 import cv2
 import gzip
 import six.moves.cPickle as pickle
-import myMLP_Sigmoid
+import myGeneralMLP_Sigmoid
 import timeit
 import sys
 import os
@@ -51,6 +51,21 @@ n_train_batches = n_train_batches // batch_size
 n_valid_batches = n_valid_batches // batch_size
 n_test_batches = n_test_batches // batch_size
 
+
+#数据格式对齐
+test_set_x = test_set_x.T
+valid_set_x = valid_set_x.T
+train_set_x = train_set_x.T
+
+test_set_y = test_set_y.T
+valid_set_y = valid_set_y.T
+train_set_y = train_set_y.T
+
+# 依据输入，将其序列化，得到[0,1,0,...1]向量
+train_set_y_buff = numpy.zeros((output_len, train_set_y.shape[0]), dtype='int32')
+train_set_y_buff[train_set_y[numpy.arange(train_set_y.shape[0])], numpy.arange(train_set_y.shape[0])] = 1
+
+
 # cc = train_set_x[0]
 # cc = cc.reshape(28,28)
 # # python要用show展现出来图
@@ -59,8 +74,9 @@ n_test_batches = n_test_batches // batch_size
 # ax.imshow(cc)   #默认配置
 # plt.show()   #显示图像
 
-
-classifier = myMLP_Sigmoid.MyMLP_Sigmoid(n_in=n_train_point, n_h=hidden_len, n_out=output_len)
+# classifier = myMLP_Sigmoid.MyMLP_Sigmoid(n_in=n_train_point, n_h=hidden_len, n_out=output_len)
+mlpLayers = numpy.array([n_train_point, hidden_len, output_len], dtype='int32')
+classifier = myGeneralMLP_Sigmoid.MyGeneralMLP_Sigmoid(mlpLayers, n_d=batch_size)
 
 ###############
 # TRAIN MODEL #
@@ -78,7 +94,6 @@ validation_frequency = min(n_train_batches, patience // 10)
 # on the validation set; in this case we
 # check every epoch
 
-best_validation_loss = numpy.inf
 test_score = 0.
 start_time = timeit.default_timer()
 
@@ -89,16 +104,15 @@ best_validation_loss = 0
 while (epoch < n_epochs) and (not done_looping):
     epoch = epoch + 1
     for minibatch_index in range(n_train_batches):
-        tarin_x = train_set_x[(minibatch_index*batch_size):((minibatch_index+1)*batch_size)].T
-        tarin_y = train_set_y[(minibatch_index*batch_size):((minibatch_index+1)*batch_size)].T
-        # 依据输入，将其序列化，得到[0,1,0,...1]向量
-        y_buff = numpy.zeros((output_len, batch_size), dtype='int32')
-        y_buff[tarin_y[numpy.arange(batch_size)], numpy.arange(batch_size)] = 1
-        classifier.myMLPGradCalcAndParmUpdate(input=tarin_x, y=y_buff, lr=learning_rate,
-                                              n_out=output_len, n_d=batch_size)
+        tarin_x = train_set_x[:, (minibatch_index*batch_size):((minibatch_index+1)*batch_size)]
+        tarin_y = train_set_y_buff[:, (minibatch_index*batch_size):((minibatch_index+1)*batch_size)]
+        # classifier.myMLPGradCalcAndParmUpdate(input=tarin_x, y=tarin_y, lr=learning_rate,
+        #                                       n_out=output_len, n_d=batch_size)
+        classifier.myMLPGradCalcAndParmUpdate(input=tarin_x, y=tarin_y, lr=learning_rate,
+                                              n_d=batch_size)
 
-    valid_x = valid_set_x.T
-    valid_y = valid_set_y.T
+    valid_x = valid_set_x
+    valid_y = valid_set_y
     classifier.myMLPPredict(valid_x)
     temp = classifier.myMLPPredictErr(valid_y)
 
@@ -113,8 +127,8 @@ while (epoch < n_epochs) and (not done_looping):
     )
 
 
-test_x = test_set_x.T
-test_y = test_set_y.T
+test_x = test_set_x
+test_y = test_set_y
 classifier.myMLPPredict(test_x)
 test_score = classifier.myMLPPredictErr(test_y)
 

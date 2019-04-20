@@ -47,9 +47,7 @@ class MyMLP_Sigmoid(object):
         #依据输入，将其序列化，得到[0,1,0,...1]向量
 
         self.z = self.sigmoid((self.W_h @ input) + self.B_h)  #[n_h,n_d]
-        self.z_e = self.sigmoid(self.W_h @ input + self.B_h)  # [n_h,n_d]
-        self.z_e = self.z[numpy.newaxis,:,:]    #扩展为[1,n_h,n_d]
-
+        self.z_e = self.z[numpy.newaxis,:,:]     #扩展为[1,n_h,n_d]
         self.p_y_given_x = self.sigmoid(self.W_o @ self.z + self.B_o)  #[n_out,n_d]
         # self.p_y_given_x_e = self.p_y_given_x[numpy.newaxis,:,:]    #扩展为[1,n_out,n_d]
 
@@ -57,25 +55,25 @@ class MyMLP_Sigmoid(object):
         B_o_GradBuff = (y-self.p_y_given_x) * self.p_y_given_x * (1 - self.p_y_given_x)    #[n_out,n_d]
         B_o_Grad = numpy.sum(B_o_GradBuff,axis=1,keepdims=True)
 
-        B_o_GradBuff = B_o_GradBuff[:,numpy.newaxis,:]   #扩展为[n_out,1,n_d]
-        W_o_GradBuff = B_o_GradBuff * self.z_e      #[n_out,n_h,n_d]
+        B_o_GradBuff_e = B_o_GradBuff[:,numpy.newaxis,:]   #扩展为[n_out,1,n_d]
+        W_o_GradBuff = B_o_GradBuff_e * self.z_e      #[n_out,n_h,n_d]
         W_o_Grad = numpy.sum(W_o_GradBuff,2)        #[n_out,n_h]
 
-        self.W_o = self.W_o + lr * W_o_Grad / n_d        #梯度方向更新
-        self.B_o = self.B_o + lr * B_o_Grad / n_d
+        self.W_o = self.W_o + (lr / n_d) * W_o_Grad        #梯度方向更新
+        self.B_o = self.B_o + (lr / n_d) * B_o_Grad
 
         # 隐藏层参数
-        W_o_e = self.W_o[:,:,numpy.newaxis]      #[n_out,n_h,1]
-        B_h_GradBuff = W_o_GradBuff * (1-self.z_e) * W_o_e     #[n_out,n_h,n_d]
-        B_h_Grad = numpy.sum(numpy.sum(B_h_GradBuff,0),axis=1,keepdims=True)
+        W_o_e = self.W_o.T @ B_o_GradBuff       #[n_h,n_d]
+        B_h_GradBuff = W_o_e * (self.z * (1-self.z))     #[n_h,n_d]
+        B_h_Grad = numpy.sum(B_h_GradBuff,axis=1,keepdims=True)
 
-        input_e = input[numpy.newaxis,numpy.newaxis,:,:]    #扩展为[1,1,n_in,n_d]
-        B_h_GradBuff = B_h_GradBuff[:,:,numpy.newaxis,:]    #扩展为[n_out,n_h,1,n_d]
+        input_e = input[numpy.newaxis,:,:]    #扩展为[1,n_in,n_d]
+        B_h_GradBuff = B_h_GradBuff[:,numpy.newaxis,:]    #扩展为[n_h,1,n_d]
         W_h_GradBuff = B_h_GradBuff * input_e
-        W_h_Grad = numpy.sum(numpy.sum(W_h_GradBuff,0),2)
+        W_h_Grad = numpy.sum(W_h_GradBuff,2)
 
-        self.W_h = self.W_h + lr * W_h_Grad / n_d        #梯度方向更新
-        self.B_h = self.B_h + lr * B_h_Grad / n_d
+        self.W_h = self.W_h + (lr / n_d) * W_h_Grad        #梯度方向更新
+        self.B_h = self.B_h + (lr / n_d) * B_h_Grad
 
 
     def myMLPPredict(self, input):

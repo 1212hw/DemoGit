@@ -171,12 +171,14 @@ class MyMLP(object):
         # self.W_h = numpy.ones((n_h, n_in), dtype='float64') / (n_h*n_in)
         # self.W_o = numpy.random.rand(n_out, n_h)
         # self.W_h = numpy.random.rand(n_h, n_in)
-        self.W_o = numpy.random.uniform(low=-numpy.sqrt(6. / (n_h + n_out)),
-                    high=numpy.sqrt(6. / (n_h + n_out)),
-                    size = (n_out, n_h+1))
-        self.W_h = numpy.random.uniform(low=-numpy.sqrt(6. / (n_in + n_h)),
-                    high=numpy.sqrt(6. / (n_in + n_h)),
-                    size = (n_h, n_in+1))
+        self.W_o = numpy.random.randn(n_out, n_h+1)
+        self.W_h = numpy.random.randn(n_h, n_in+1)
+        # self.W_o = numpy.random.uniform(low=-numpy.sqrt(6. / (n_h + n_out)),
+        #             high=numpy.sqrt(6. / (n_h + n_out)),
+        #             size = (n_out, n_h+1))
+        # self.W_h = numpy.random.uniform(low=-numpy.sqrt(6. / (n_in + n_h)),
+        #             high=numpy.sqrt(6. / (n_in + n_h)),
+        #             size = (n_h, n_in+1))
         # parameters of the model
 
         # keep track of model input
